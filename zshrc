@@ -59,7 +59,7 @@ alias zsrc='source ~/.zshrc'
 bindkey -M viins 'jk' vi-cmd-mode
 
 # Customize to your needs...
-export PATH=/usr/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin:/usr/texbin
+export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/X11/bin:/usr/texbin
 
 #TODO Comment this out if we're not on OS X
 # set shortcut for ruby programming dir
