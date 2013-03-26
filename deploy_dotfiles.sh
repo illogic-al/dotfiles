@@ -10,7 +10,10 @@ do
   then
     if [[ -d $dotfiles ]]
     then
-      if [[ (($i != 'gvimrc')) ]]
+      if [[ (($i != 'gvimrc') && ($i != 'profile.bak') 
+        && ($i != 'vim.old') && ($i != 'vimrc.old') 
+        && ($i != 'deploy_dotfiles.sh') && ($i != '.git')
+        && ($i != 'power.sh'))]]
       then
         echo '$dotfiles exists ...'
         if [[ -d $oldfiles ]]
