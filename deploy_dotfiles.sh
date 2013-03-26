@@ -15,23 +15,29 @@ do
         && ($i != 'deploy_dotfiles.sh') && ($i != '.git')
         && ($i != 'power.sh'))]]
       then
-        echo '$dotfiles exists ...'
-        if [[ -d $oldfiles ]]
+        echo $dotfiles 'exists ...'
+        if [[ -e $HOME/.$i ]]
         then
-          echo 'Moving old dotfiles to $oldfiles ...'
-          mv $HOME/.$i $oldfiles
-        else
-          echo 'Moving old dotfiles to $oldfiles ...'
-          mkdir $oldfiles
-          mv $HOME/.$i $oldfiles
+          if [[ -d $oldfiles ]]
+          then
+            echo 'Moving' $i 'to' $oldfiles
+            mv -f $HOME/.$i $oldfiles
+          else
+            echo 'Creating' $oldfiles '...'
+            mkdir $oldfiles
+            echo 'Moving' $i 'to' $oldfiles
+            mv -f $HOME/.$i $oldfiles
+          fi
         fi
 
-        echo 'Linking dotfiles in $dotfiles ...'
-        ln -s $dotfiles/$i $HOME/.$i
-        echo 'All done!'
+        echo 'Linking' $i 'in' $dotfiles
+        echo ''
+        ln -sf $dotfiles/$i $HOME/.$i
       fi
     else
-      echo 'Whoops! Your dotfiles directory is not at $dotfiles.'
+      echo 'Whoops! Your dotfiles directory is not at' $dotfiles
     fi
   fi
 done
+
+echo 'All done!'
