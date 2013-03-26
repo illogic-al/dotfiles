@@ -1,0 +1,538 @@
+# /etc/skel/.bashrc
+#
+# This file is sourced by all *interactive* bash shells on startup,
+# including some apparently interactive shells such as scp and rcp
+# that can't tolerate any output.  So make sure this doesn't display
+# anything or bad things will happen !
+
+
+# Test for an interactive shell.  There is no need to set anything
+# past this point for scp and rcp, and it's important to refrain from
+# outputting anything in those cases.
+if [[ $- != *i* ]] ; then
+	# Shell is non-interactive.  Be done now!
+	return
+fi
+
+alias ll='ls -lh'
+alias la='ls -Ah'
+alias ld='ls -dlh'
+alias l='ls -CFh'
+alias du='du -h'
+
+# Put your fun stuff here.
+# Enable color in OS X Terminal output
+export CLICOLOR=1
+
+# append to bash_history if Terminal.app quits
+shopt -s histappend
+
+# history handling
+#
+# Erase duplicates
+# Bash History
+export HISTCONTROL="ignoredups"
+export HISTCONTROL=erasedups
+
+# resize history size
+export HISTSIZE=5000
+
+# Power prompt from http://www.askapache.com/linux-unix/bash-power-prompt.html
+#PS1="\n\[\033[1;30m\][$$:$PPID - \j:\!\[\033[1;30m\]]\[\033[0;36m\] \T \
+#\[\033[1;30m\][\[\033[1;34m\]\u@\H\[\033[1;30m\]:\[\033[0;37m\]${SSH_TTY:-o} \
+#\[\033[0;32m\]+${SHLVL}\[\033[1;30m\]] \[\033[1;37m\]\w\[\033[0;37m\] \n\$ "
+
+THEME_PROMPT_HOST='\H'
+SCM_THEME_PROMPT_DIRTY=' ✗'
+SCM_THEME_PROMPT_CLEAN=' ✓'
+SCM_THEME_PROMPT_PREFIX=' |'
+SCM_THEME_PROMPT_SUFFIX='|'
+
+GIT='git'
+SCM_GIT_CHAR='±'
+
+HG='hg'
+SCM_HG_CHAR='☿'
+
+SVN='svn'
+SCM_SVN_CHAR='⑆'
+
+SCM_NONE_CHAR='○'
+
+RVM_THEME_PROMPT_PREFIX=' |'
+RVM_THEME_PROMPT_SUFFIX='|'
+
+VIRTUALENV_THEME_PROMPT_PREFIX=' |'
+VIRTUALENV_THEME_PROMPT_SUFFIX='|'
+
+function scm {
+  if [[ -d .git ]]; then SCM=$GIT
+  elif [[ -n "$(git symbolic-ref HEAD 2> /dev/null)" ]]; then SCM=$GIT
+  elif [[ -d .hg ]]; then SCM=$HG
+  elif [[ -n "$(hg root 2> /dev/null)" ]]; then SCM=$HG
+  elif [[ -d .svn ]]; then SCM=$SVN
+  else SCM='NONE'
+  fi
+}
+
+function scm_char {
+  if [[ -z $SCM ]]; then scm; fi
+  [[ $SCM == $GIT ]] && echo $SCM_GIT_CHAR && return
+  [[ $SCM == $HG ]] && echo $SCM_HG_CHAR && return
+  [[ $SCM == $SVN ]] && echo $SCM_SVN_CHAR && return
+echo $SCM_NONE_CHAR
+}
+
+function scm_prompt_info {
+  if [[ -z $SCM ]]; then scm; fi
+  [[ $SCM == $GIT ]] && git_prompt_info && return
+  [[ $SCM == $HG ]] && hg_prompt_info && return
+  [[ $SCM == $SVN ]] && svn_prompt_info && return
+}
+
+# Stolen from Steve Losh
+# left in for backwards-compatibility
+function prompt_char {
+    char=$(scm_char);
+    echo -e "$char"
+}
+
+function git_prompt_info {
+  if [[ -n $(git status -s 2> /dev/null |grep -v ^# |grep -v "working directory clean") ]]; then
+state=${GIT_THEME_PROMPT_DIRTY:-$SCM_THEME_PROMPT_DIRTY}
+  else
+state=${GIT_THEME_PROMPT_CLEAN:-$SCM_THEME_PROMPT_CLEAN}
+  fi
+prefix=${GIT_THEME_PROMPT_PREFIX:-$SCM_THEME_PROMPT_PREFIX}
+  suffix=${GIT_THEME_PROMPT_SUFFIX:-$SCM_THEME_PROMPT_SUFFIX}
+  ref=$(git symbolic-ref HEAD 2> /dev/null) || return
+
+echo -e "$prefix${ref#refs/heads/}$state$suffix"
+}
+
+function svn_prompt_info {
+  if [[ -n $(svn status 2> /dev/null) ]]; then
+state=${SVN_THEME_PROMPT_DIRTY:-$SCM_THEME_PROMPT_DIRTY}
+  else
+state=${SVN_THEME_PROMPT_CLEAN:-$SCM_THEME_PROMPT_CLEAN}
+  fi
+prefix=${SVN_THEME_PROMPT_PREFIX:-$SCM_THEME_PROMPT_PREFIX}
+  suffix=${SVN_THEME_PROMPT_SUFFIX:-$SCM_THEME_PROMPT_SUFFIX}
+  ref=$(svn info 2> /dev/null | awk -F/ '/^URL:/ { for (i=0; i<=NF; i++) { if ($i == "branches" || $i == "tags" ) { print $(i+1); break }; if ($i == "trunk") { print $i; break } } }') || return
+
+  [[ -z $ref ]] && return
+echo -e "$prefix$ref$state$suffix"
+}
+
+function hg_prompt_info() {
+    if [[ -n $(hg status 2> /dev/null) ]]; then
+state=${HG_THEME_PROMPT_DIRTY:-$SCM_THEME_PROMPT_DIRTY}
+    else
+state=${HG_THEME_PROMPT_CLEAN:-$SCM_THEME_PROMPT_CLEAN}
+    fi
+prefix=${HG_THEME_PROMPT_PREFIX:-$SCM_THEME_PROMPT_PREFIX}
+    suffix=${HG_THEME_PROMPT_SUFFIX:-$SCM_THEME_PROMPT_SUFFIX}
+    branch=$(hg summary 2> /dev/null | grep branch | awk '{print $2}')
+    changeset=$(hg summary 2> /dev/null | grep parent | awk '{print $2}')
+
+    echo -e "$prefix$branch:${changeset#*:}$state$suffix"
+}
+
+function rvm_version_prompt {
+  if which rvm &> /dev/null; then
+rvm=$(rvm tools identifier) || return
+echo -e "$RVM_THEME_PROMPT_PREFIX$rvm$RVM_THEME_PROMPT_SUFFIX"
+  fi
+}
+
+function virtualenv_prompt {
+  if which virtualenv &> /dev/null; then
+virtualenv=$([ ! -z "$VIRTUAL_ENV" ] && echo "`basename $VIRTUAL_ENV`") || return
+echo -e "$VIRTUALENV_THEME_PROMPT_PREFIX$virtualenv$VIRTUALENV_THEME_PROMPT_SUFFIX"
+  fi
+}
+
+black="\[\e[0;30m\]"
+red="\[\e[0;31m\]"
+green="\[\e[0;32m\]"
+yellow="\[\e[0;33m\]"
+blue="\[\e[0;34m\]"
+purple="\[\e[0;35m\]"
+cyan="\[\e[0;36m\]"
+white="\[\e[1;37m\]"
+orange="\[\e[33;40m\]"
+
+bold_black="\[\e[1;30m\]"
+bold_red="\[\e[1;31m\]"
+bold_green="\[\e[1;32m\]"
+bold_yellow="\[\e[1;33m\]"
+bold_blue="\[\e[1;34m\]"
+bold_purple="\[\e[1;35m\]"
+bold_cyan="\[\e[1;36m\]"
+bold_white="\[\e[1;37m\]"
+bold_orange="\[\e[1;33;40m\]"
+
+underline_black="\[\e[4;30m\]"
+underline_red="\[\e[4;31m\]"
+underline_green="\[\e[4;32m\]"
+underline_yellow="\[\e[4;33m\]"
+underline_blue="\[\e[4;34m\]"
+underline_purple="\[\e[4;35m\]"
+underline_cyan="\[\e[4;36m\]"
+underline_white="\[\e[4;37m\]"
+underline_orange="\[\e[4;33;40m\]"
+
+background_black="\[\e[40m\]"
+background_red="\[\e[41m\]"
+background_green="\[\e[42m\]"
+background_yellow="\[\e[43m\]"
+background_blue="\[\e[44m\]"
+background_purple="\[\e[45m\]"
+background_cyan="\[\e[46m\]"
+background_white="\[\e[47m\]"
+
+
+normal="\[\e[00m\]"
+reset_color="\[\e[39m\]"
+
+export LSCOLORS='Gxfxcxdxdxegedabagacad'
+
+function ips {
+  ifconfig | grep "inet " | awk '{ print $2 }'
+}
+
+function down4me() {
+  curl -s "http://www.downforeveryoneorjustme.com/$1" | sed '/just you/!d;s/<[^>]*>//g'
+}
+
+function myip {
+  res=$(curl -s checkip.dyndns.org | grep -Eo '[0-9\.]+')
+  echo "Your public IP is: ${bold_green} $res ${normal}"
+}
+
+pass() {
+  which gshuf &> /dev/null
+  if [ $? -eq 1 ]
+  then
+echo "Error: shuf isn't installed!"
+    return 1
+  fi
+
+pass=$(shuf -n4 /usr/share/dict/words | tr '\n' ' ')
+  echo "With spaces (easier to memorize): $pass"
+  echo "Without (use this as the pass): $(echo $pass | tr -d ' ')"
+}
+
+# Function for previewing markdown files in the browser
+
+function pmdown() {
+  if command -v markdown &>/dev/null
+  then
+markdown $1 | browser
+  else
+echo "You don't have a markdown command installed!"
+  fi
+}
+
+# Make a directory and immediately 'cd' into it
+
+function mkcd() {
+  mkdir -p "$*"
+  cd "$*"
+}
+
+# Search through directory contents with grep
+
+function lsgrep(){
+  ls | grep "$*"
+}
+
+# View man documentation in Preview
+pman () {
+   man -t "${1}" | open -f -a $PREVIEW
+}
+
+
+pcurl() {
+  curl "${1}" | open -f -a $PREVIEW
+}
+
+pri() {
+  ri -T "${1}" | open -f -a $PREVIEW
+}
+
+quiet() {
+$* &> /dev/null &
+}
+
+banish-cookies() {
+rm -r ~/.macromedia ~/.adobe
+ln -s /dev/null ~/.adobe
+ln -s /dev/null ~/.macromedia
+}
+
+# disk usage per directory
+# in Mac OS X and Linux
+usage ()
+{
+    if [ $(uname) = "Darwin" ]; then
+if [ -n $1 ]; then
+du -hd $1
+        else
+du -hd 1
+        fi
+
+elif [ $(uname) = "Linux" ]; then
+if [ -n $1 ]; then
+du -h --max-depth=1 $1
+        else
+du -h --max-depth=1
+        fi
+fi
+}
+
+# One thing todo
+function t() {
+if [[ "$*" == "" ]] ; then
+cat ~/.t
+else
+echo "$*" > ~/.t
+fi
+}
+
+# Checks for existence of a command
+command_exists () {
+    type "$1" &> /dev/null ;
+}
+
+# List all plugins and functions defined by bash-it
+function plugins-help() {
+    
+    echo "bash-it Plugins Help-Message"
+    echo
+
+set | grep "()" \
+    | sed -e "/^_/d" | grep -v "BASH_ARGC=()" \
+    | sed -e "/^\s/d" | grep -v "BASH_LINENO=()" \
+    | grep -v "BASH_ARGV=()" \
+    | grep -v "BASH_SOURCE=()" \
+    | grep -v "DIRSTACK=()" \
+    | grep -v "GROUPS=()" \
+    | grep -v "BASH_CMDS=()" \
+    | grep -v "BASH_ALIASES=()" \
+    | grep -v "COMPREPLY=()" | sed -e "s/()//"
+}
+
+# back up file with timestamp
+# useful for administrators and configs
+buf () {
+    filename=$1
+    filetime=$(date +%Y%m%d_%H%M%S)
+    cp ${filename} ${filename}_${filetime}
+}
+
+battery_percentage(){
+  if command_exists acpi;
+  then
+local ACPI_OUTPUT=$(acpi -b)
+    case $ACPI_OUTPUT in
+      *" Unknown"*)
+        local PERC_OUTPUT=$(echo $ACPI_OUTPUT | head -c 22 | tail -c 2)
+        case $PERC_OUTPUT in
+          *%)
+            echo "0${PERC_OUTPUT}" | head -c 2
+            ;;
+          *)
+            echo ${PERC_OUTPUT}
+            ;;
+        esac
+        ;;
+      *" Discharging"*)
+        local PERC_OUTPUT=$(echo $ACPI_OUTPUT | head -c 26 | tail -c 2)
+        case $PERC_OUTPUT in
+          *%)
+            echo "0${PERC_OUTPUT}" | head -c 2
+            ;;
+          *)
+            echo ${PERC_OUTPUT}
+            ;;
+        esac
+        ;;
+      *" Charging"*)
+        local PERC_OUTPUT=$(echo $ACPI_OUTPUT | head -c 23 | tail -c 2)
+        case $PERC_OUTPUT in
+          *%)
+            echo "0${PERC_OUTPUT}" | head -c 2
+            ;;
+          *)
+            echo ${PERC_OUTPUT}
+            ;;
+        esac
+        ;;
+      *" Full"*)
+        echo '99'
+        ;;
+      *)
+        echo '-1'
+        ;;
+    esac
+elif command_exists ioreg;
+  then
+    # http://hints.macworld.com/article.php?story=20100130123935998
+    #local IOREG_OUTPUT_10_6=$(ioreg -l | grep -i capacity | tr '\n' ' | ' | awk '{printf("%.2f%%", $10/$5 * 100)}')
+    #local IOREG_OUTPUT_10_5=$(ioreg -l | grep -i capacity | grep -v Legacy| tr '\n' ' | ' | awk '{printf("%.2f%%", $14/$7 * 100)}')
+    local IOREG_OUTPUT=$(ioreg -n AppleSmartBattery -r | awk '$1~/Capacity/{c[$1]=$3} END{OFMT="%.2f%%"; max=c["\"MaxCapacity\""]; print (max>0? 100*c["\"CurrentCapacity\""]/max: "?")}')
+    case $IOREG_OUTPUT in
+      100*)
+        echo '99'
+        ;;
+      *)
+        echo $IOREG_OUTPUT | head -c 2
+        ;;
+    esac
+else
+echo "no"
+  fi
+}
+
+battery_charge(){
+  # Full char
+  local F_C='▸'
+  # Depleted char
+  local D_C='▹'
+  local DEPLETED_COLOR="${normal}"
+  local FULL_COLOR="${green}"
+  local HALF_COLOR="${yellow}"
+  local DANGER_COLOR="${red}"
+  local BATTERY_OUTPUT="${DEPLETED_COLOR}${D_C}${D_C}${D_C}${D_C}${D_C}"
+  local BATTERY_PERC=$(battery_percentage)
+
+  case $BATTERY_PERC in
+    no)
+      echo ""
+      ;;
+    9*)
+      echo "${FULL_COLOR}${F_C}${F_C}${F_C}${F_C}${F_C}${normal}"
+      ;;
+    8*)
+      echo "${FULL_COLOR}${F_C}${F_C}${F_C}${F_C}${HALF_COLOR}${F_C}${normal}"
+      ;;
+    7*)
+      echo "${FULL_COLOR}${F_C}${F_C}${F_C}${F_C}${DEPLETED_COLOR}${D_C}${normal}"
+      ;;
+    6*)
+      echo "${FULL_COLOR}${F_C}${F_C}${F_C}${HALF_COLOR}${F_C}${DEPLETED_COLOR}${D_C}${normal}"
+      ;;
+    5*)
+      echo "${FULL_COLOR}${F_C}${F_C}${F_C}${DEPLETED_COLOR}${D_C}${D_C}${normal}"
+      ;;
+    4*)
+      echo "${FULL_COLOR}${F_C}${F_C}${HALF_COLOR}${F_C}${DEPLETED_COLOR}${D_C}${D_C}${normal}"
+      ;;
+    3*)
+      echo "${FULL_COLOR}${F_C}${F_C}${DEPLETED_COLOR}${D_C}${D_C}${D_C}${normal}"
+      ;;
+    2*)
+      echo "${FULL_COLOR}${F_C}${HALF_COLOR}${F_C}${DEPLETED_COLOR}${D_C}${D_C}${D_C}${normal}"
+      ;;
+    1*)
+      echo "${FULL_COLOR}${F_C}${DEPLETED_COLOR}${D_C}${D_C}${D_C}${D_C}${normal}"
+      ;;
+    05)
+      echo "${DANGER_COLOR}${F_C}${DEPLETED_COLOR}${D_C}${D_C}${D_C}${D_C}${normal}"
+      ;;
+    04)
+      echo "${DANGER_COLOR}${F_C}${DEPLETED_COLOR}${D_C}${D_C}${D_C}${D_C}${normal}"
+      ;;
+    03)
+      echo "${DANGER_COLOR}${F_C}${DEPLETED_COLOR}${D_C}${D_C}${D_C}${D_C}${normal}"
+      ;;
+    02)
+      echo "${DANGER_COLOR}${F_C}${DEPLETED_COLOR}${D_C}${D_C}${D_C}${D_C}${normal}"
+      ;;
+    0*)
+      echo "${HALF_COLOR}${F_C}${DEPLETED_COLOR}${D_C}${D_C}${D_C}${D_C}${normal}"
+      ;;
+    *)
+      echo "${DANGER_COLOR}UNPLG${normal}"
+      ;;
+  esac
+}
+
+SCM_THEME_PROMPT_PREFIX=""
+SCM_THEME_PROMPT_SUFFIX=""
+
+SCM_THEME_PROMPT_DIRTY=" ${bold_red}✗${normal}"
+SCM_THEME_PROMPT_CLEAN=" ${bold_green}✓${normal}"
+SCM_GIT_CHAR="${bold_green}±${normal}"
+SCM_SVN_CHAR="${bold_cyan}⑆${normal}"
+SCM_HG_CHAR="${bold_red}☿${normal}"
+
+#Mysql Prompt
+export MYSQL_PS1="(\u@\h) [\d]> "
+
+case $TERM in
+        xterm*)
+        TITLEBAR="\[\033]0;\w\007\]"
+        ;;
+        *)
+        TITLEBAR=""
+        ;;
+esac
+
+PS3=">> "
+
+__my_rvm_ruby_version() {
+    local gemset=$(echo $GEM_HOME | awk -F'@' '{print $2}')
+  [ "$gemset" != "" ] && gemset="@$gemset"
+    local version=$(echo $MY_RUBY_HOME | awk -F'-' '{print $2}')
+    local full="$version$gemset"
+  [ "$full" != "" ] && echo "[$full]"
+}
+
+is_vim_shell() {
+        if [ ! -z "$VIMRUNTIME" ]
+        then
+echo "[${cyan}vim shell${normal}]"
+        fi
+}
+
+modern_scm_prompt() {
+        CHAR=$(scm_char)
+        if [ $CHAR = $SCM_NONE_CHAR ]
+        then
+return
+else
+echo "[$(scm_char)][$(scm_prompt_info)]"
+        fi
+}
+
+prompt() {
+
+   case $HOSTNAME in
+    "zork"* ) my_ps_host="${green}\h${normal}";
+            ;;
+    "pandora") my_ps_host="${red}\h${normal}";
+            ;;
+    esac
+
+my_ps_user="\[\033[01;32m\]\u\[\033[00m\]";
+    my_ps_root="\[\033[01;31m\]\u\[\033[00m\]";
+    my_ps_path="\[\033[01;36m\]\w\[\033[00m\]";
+
+    # nice prompt
+    case "`id -u`" in
+        0) PS1="${TITLEBAR}┌─[$my_ps_root][$my_ps_host]$(modern_scm_prompt)$(__my_rvm_ruby_version)[${cyan}\w${normal}]$(is_vim_shell)
+└─▪ "
+        ;;
+        *) PS1="${TITLEBAR}┌─[$my_ps_user][$my_ps_host]$(modern_scm_prompt)$(__my_rvm_ruby_version)[${cyan}\w${normal}]$(is_vim_shell)
+└─▪ "
+        ;;
+    esac
+}
+
+PS2="└─▪ "
+
+
+
+PROMPT_COMMAND=prompt
