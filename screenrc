@@ -1,0 +1,26 @@
+# Always start new login shell for RVM
+shell -${SHELL}
+
+# terminfo and termcap for nice 256 color terminal
+# # allow bold colors - necessary for some reason
+ attrcolor b ".I"
+# tell screen how to set colors. AB = background, AF=foreground 
+ termcapinfo xterm 'Co#256:AB=\E[48;5;%dm:AF=\E[38;5;%dm'
+# # erase background with current bg color 
+ defbce "on"
+# Set screen's $TERM to 256-color. For vim color-themes.
+term screen-256color-bce
+
+# Turn off the startup message
+startup_message off
+
+# MOAR scrollback http://www.samsarin.com/blog/2007/03/11/gnu-screen-working-with-the-scrollback-buffer/
+defscrollback 5000
+
+# Set hard status
+hardstatus alwayslastline
+hardstatus string '%{= kG}[ %{G}%H %{g}][%= %{= kw}%?%-Lw%?%{r}(%{W}%n*%f%t%?(%u)%?%{r})%{w}%?%+Lw%?%?%= %{g}][%{w} %Y-%m-%d %{W} %c %{g}]'
+
+# Default screens to start
+screen -t local     0
+#screen -t remote    1     ssh $remote_url
