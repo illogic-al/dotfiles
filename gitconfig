@@ -1,0 +1,32 @@
+[user]
+	name = Orville Bennett
+	email = illogical1@ymail.com
+[core]
+	excludesfile = ~/.cvsignore
+	autocrlf = input
+	safecrlf = true
+[difftool "sourcetree"]
+	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+	path = 
+[merge]
+  keepBackup = false
+  tool = p4merge
+[mergetool "p4merge"]
+  cmd = p4merge "$BASE" "$LOCAL" "$REMOTE" "$MERGED"
+  keepTemporaries = false
+  trustExitCode = true
+  keepBackup = false
+[alias]
+  co = checkout
+  ci = commit
+  st = status
+  br = branch
+  hist = log --pretty=format:\"%h %ad | %s%d [%an]\" --graph --date=short
+  type = cat-file -t
+  dump = cat-file -p
+[color]
+  ui = true
+
+[mergetool "sourcetree"]
+	cmd = /Applications/SourceTree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	trustExitCode = true
