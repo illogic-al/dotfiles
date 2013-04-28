@@ -48,6 +48,7 @@ alias gm='git merge'
 alias gp='git pull'
 alias gr='git revert'
 alias gs='git status -s'
+alias gpom='git push origin master'
 
 alias du='du -sh'
 alias df='df -h'
