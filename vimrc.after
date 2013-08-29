@@ -1,0 +1,27 @@
+"color molokai
+color xoria256
+
+set mouse=a
+
+set ttym=xterm2
+
+" Allow 256 colors
+set t_Co=256
+
+" This makes RVM work inside Vim. I have no idea why.
+set shell=bash
+
+" Allow more than 50 lines to be saved for copy/paste
+set viminfo='20,<1000,s10,h
+
+" Load fancy Powerline statusbar symbols
+let g:Powerline_symbols = 'fancy'
+
+"  Remap ESC key to 'jk'
+inoremap jk <ESC>
+
+" copy to OS X clipboard when we copy anything
+" set clipboard=unnamed
+
+" set automatically set the correct :compiler for ruby files
+autocmd FileType ruby :compiler ruby
