@@ -1,1 +1,1 @@
-/Users/orville/.vim/janus/vim/gvimrc
+vim/janus/vim/gvimrc
