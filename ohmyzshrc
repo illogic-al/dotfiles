@@ -36,7 +36,7 @@ export EDITOR=vim
 # Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
 # Example format: plugins=(rails git lol textmate ruby lighthouse)
 
-plugins=(brew osx ssh-agent rvm)
+plugins=(brew battery vi-mode osx ssh-agent rvm)
 # Define some aliases
 alias ga='git add'
 alias gb='git branch'
@@ -68,7 +68,7 @@ export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/
 # set shortcut for ruby programming dir
 export rubidir=~/Documents/Programming/Ruby
 
-PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting
+PATH=/usr/local/bin:$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting
 
 # Source after adding rvm to PATH to allow zsh to play nicely with rvm-prompt
 source $ZSH/oh-my-zsh.sh
