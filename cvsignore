@@ -2,3 +2,5 @@ tags
 .DS_Store
 .gitignore
 *~
+oh-my-zsh
+irssi
