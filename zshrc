@@ -88,6 +88,12 @@ setopt hist_ignore_dups
 # Prevent record in history entry if preceding them with at least one space
 setopt hist_ignore_space
 
+# Allow for globs that could be empty (for RVM)
+setopt nullglob
+
+# Allow use of globs in remote portion of scp command
+setopt nonomatch
+
 #aliases
 alias grep='grep --colour=auto'
 alias egrep='egrep --colour=auto'
@@ -118,3 +124,4 @@ alias gpom='git push origin master'
 
 # Add RVM to PATH for scripting
 PATH=/usr/local/lib/ruby/gems/2.0.0/gems/rak-1.4/bin:/usr/local/bin:$PATH:$HOME/.rvm/bin
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
